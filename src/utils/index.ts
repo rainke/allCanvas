@@ -3,11 +3,18 @@ export interface renderFunction {
     (ctx: CanvasRenderingContext2D, ...args): void;
 }
 
-interface locWithSize {
+interface locAndSize {
     x: number;
     y: number;
     w?: number;
     h?: number;
+}
+
+const defaultLocAndSize: locAndSize = {
+    x: 0,
+    y: 0,
+    w: 110,
+    h: 40
 }
 
 const reserveContextFunction = (render: renderFunction) => {
@@ -18,28 +25,64 @@ const reserveContextFunction = (render: renderFunction) => {
     }
 }
 
-const renderButton = reserveContextFunction(function(ctx, translate) {
-    ctx.fillStyle = '#308231';
-    ctx.translate(translate.x, translate.y);
-    ctx.fillRect(0, 0, 200, 100);
+const renderButton = reserveContextFunction(function(ctx, ls) {
+    const grd = ctx.createLinearGradient(0, 0, 0, 45);
+    grd.addColorStop(0, '#c00');
+    grd.addColorStop(0.48, '#c00');
+    grd.addColorStop(0.52, '#b00');
+    grd.addColorStop(1, '#b00');
+    ctx.fillStyle = grd;
+    ctx.shadowColor = '#500';
+    ctx.shadowOffsetY = 5;
+    ctx.shadowBlur = 1;
+    ctx.translate(ls.x, ls.y);
+    ctx.beginPath();
+    let bezierOffset = 20;
+    let left = 20;
+    let right = ls.w - left;
+    ctx.moveTo(left, 0);
+    ctx.lineTo(right, 0)
+    ctx.bezierCurveTo(
+        right + bezierOffset,
+        0,
+        right + bezierOffset,
+        ls.h,
+        right,
+        ls.h
+    );
+    ctx.lineTo(left, ls.h);
+    ctx.bezierCurveTo(
+        left - bezierOffset, ls.h, left - bezierOffset, 0, left, 0
+        );
+    ctx.closePath();
+    ctx.fill();
 });
 
-const renderText = reserveContextFunction(function(ctx, translate, text) {
+const renderText = reserveContextFunction(function(ctx, ls: locAndSize, text) {
     ctx.fillStyle = '#fff';
-    ctx.font = '36px serif';
+    ctx.font = '16px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(text, 100, 50);
+    ctx.translate(ls.x, ls.y)
+    ctx.fillText(text, ls.w / 2, ls.h / 2);
 });
 
 export class RenderUtil {
-    renderButtonWithText(ctx: CanvasRenderingContext2D, translate = {x: 0, y: 0},  text: string) {
-        renderButton(ctx, translate);
-        renderText(ctx, translate, text);
+    renderButtonWithText(
+        ctx: CanvasRenderingContext2D,
+        ls: locAndSize = defaultLocAndSize,
+        text: string
+    ) {
+        if(!ls.w) {
+            ls.w = defaultLocAndSize.w
+        }
+        if(!ls.h) {
+            ls.h = defaultLocAndSize.h
+        }
+        renderButton(ctx, ls);
+        renderText(ctx, ls, text);
     }
 }
-
-
 
 export default new RenderUtil();
 
