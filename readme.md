@@ -4,6 +4,7 @@
 因为在命名空间的文件使用`import`和`export`等语法后这个命名空间会当做模块来处理，和其他文件的相同`namespace`产生隔离，此时无法直接使用其他文件的相同命名空间下的值,需要像下面代码这样获取，也就是说模块和命名空间二选其一吧。 
 
 dep.ts
+
     //此处的export也是的A变成了模块，其他地方想使用就必须import
     export namespace A {
         export interface Log {
@@ -12,6 +13,7 @@ dep.ts
     }
 
 test.ts
+
     import * as otherName from "./src/dep";
 
     namespace A {
