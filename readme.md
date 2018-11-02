@@ -5,7 +5,7 @@
 
 dep.ts
 
-    //此处的export也是的A变成了模块，其他地方想使用就必须import
+    //此处的export也使得A变成了模块，其他地方想使用就必须import
     export namespace A {
         export interface Log {
             (str: string): void
@@ -23,3 +23,41 @@ test.ts
     }
     //因为此处的导出，变成了模块
     export default A.log;
+
+说说重载，这是我之前比较疑惑的地方，初学的时候我想定义一个函数，实现传入值的不同，返回不同类型：
+```typescript
+function createElement(tag: string) {
+    return document.createElement(tag)
+}
+const canvas = createElement('canvas');
+const context = canvas.getContext('2d'); //error: Property 'getContext' does not exist on type 'HTMLElement'
+```
+假设此处我只关注`canvas`其他的我都看成`HTMLElement`,那就先要定义个map
+```ts
+interface tagMap {
+    'canvas':HTMLCanvasElement
+}
+function createElement<T extends keyof tagMap>(tag: T) {
+    return document.createElement(tag)
+}
+```
+此时，除了`canvas`外不能穿其他的值，就需要重载,当然可以在`tagMap`里面加一个`[tag: string]: HTMLElement`,
+但这么做会有问题,这表明`tag`可以是`number`[indexable-types](http://www.typescriptlang.org/docs/handbook/interfaces.html#indexable-types)
+```ts
+function createElement<T extends keyof tagMap>(tag: T): tagMap[T];
+function createElement(tag: string): HTMLElement;
+function createElement(tag) {
+    return document.createElement(tag)
+}
+```
+重载也可以在接口里面。
+```ts
+declare var util: Util;
+interface Util {
+    createElement<T extends keyof tagMap>(tag: T): tagMap[T];
+    createElement(tag: string): HTMLElement;
+}
+const canvas = util.createElement('canvas');
+const other = util.createElement('other');
+
+```
